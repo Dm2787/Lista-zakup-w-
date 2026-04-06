@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Basket v5.3 - Base Restored</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-fallback: #f0f2f5;
+            --bg-url: url('https://images.unsplash.com/photo-1543083477-4f7f01bd43f0?q=80&w=1600&auto=format&fit=crop');
+            --card-bg: rgba(255, 255, 255, 0.65);
+            --text-color: #1a1a1a;
+            --accent: #0984e3;
+            --danger: #d63031;
+            --edit: #27ae60;
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --footer-text: rgba(0, 0, 0, 0.5);
+        }
+
+        body.dark-mode {
+            --bg-fallback: #121212;
+            --card-bg: rgba(20, 20, 20, 0.85);
+            --text-color: #ffffff;
+            --accent: #74b9ff;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --footer-text: rgba(255, 255, 255, 0.5);
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-fallback) var(--bg-url) no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-color);
+            transition: 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        button, input, .tab, .btn, li, .item-content {
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        .glass-nav {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 12px 20px;
+            border-radius: 50px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 10px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            max-width: 95%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .btn:hover { background: var(--accent); color: white; }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            width: 100%;
+            max-width: 480px;
+            padding: 25px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            box-sizing: border-box;
+            margin-bottom: 30px;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            scrollbar-width: none;
+        }
+        .tabs-container::-webkit-scrollbar { display: none; }
+
+        .tab {
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 15px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.3s;
+            border: 1px solid transparent;
+        }
+        .tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .input-group { display: flex; gap: 8px; margin-bottom: 20px; }
+        input#main-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.15);
+            color: var(--text-color);
+            font-size: 16px;
+            min-width: 0;
+        }
+
+        .group-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 20px 0 8px 10px;
+            font-weight: 800;
+            color: var(--accent);
+            opacity: 0.8;
+        }
+
+        li {
+            background: rgba(255,255,255,0.15);
+            margin-bottom: 10px;
+            padding: 14px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--glass-border);
+            gap: 10px;
+            word-break: break-word;
+        }
+
+        .item-number { font-weight: 800; font-size: 12px; opacity: 0.5; min-width: 25px; }
+        .item-content { flex-grow: 1; cursor: pointer; font-size: 15px; }
+        li.is-done { opacity: 0.35; filter: grayscale(1); }
+        li.is-done .item-content { text-decoration: line-through; }
+
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.6; padding: 5px; }
+        .btn-edit { color: var(--edit); }
+        .btn-del { color: var(--danger); }
+
+        .app-footer {
+            width: 100%;
+            text-align: center;
+            font-size: 11px;
+            color: var(--footer-text);
+            padding: 10px 0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+
+<div class="glass-nav">
+    <button class="btn" onclick="setTheme('light')">☀️ Jasny</button>
+    <button class="btn" onclick="setTheme('dark')">🌙 Ciemny</button>
+    <button class="btn" onclick="copyToClipboard()">📋 Kopiuj</button>
+    <button class="btn" onclick="clearChecked()">Wyczyść 🧹</button>
+</div>
+
+<div class="glass-card">
+    <div id="tabs" class="tabs-container"></div>
+
+    <div class="input-group">
+        <input type="text" id="main-input" placeholder="Co kupić?">
+        <button class="btn" id="voice-btn" style="padding: 10px;" onclick="handleVoice()">🎙️</button>
+        <button class="btn" style="background: var(--accent); color: white;" onclick="addItem()">DODAJ</button>
+    </div>
+
+    <div id="list-container"></div>
+</div>
+
+<div class="app-footer">
+    Smart Basket v5.3 locked | by D. M. & AI
+</div>
+
+<script>
+    let products = JSON.parse(localStorage.getItem('sb_products')) || [];
+    let shops = JSON.parse(localStorage.getItem('sb_shops')) || ['Wszystkie', 'Lidl', 'Biedronka'];
+    let currentTab = 'Wszystkie';
+    let recognition;
+
+    function playStandardMicSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(660, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.15);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.15);
+        } catch(e) {}
+    }
+
+    function updateStorage() {
+        localStorage.setItem('sb_products', JSON.stringify(products));
+        localStorage.setItem('sb_shops', JSON.stringify(shops));
+        renderApp();
+    }
+
+    function handleVoice() {
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Speech) return alert("Brak wsparcia mowy.");
+        playStandardMicSound();
+        recognition = new Speech();
+        recognition.lang = 'pl-PL';
+        recognition.onresult = (e) => {
+            document.getElementById('main-input').value = e.results[0][0].transcript;
+            addItem();
+            recognition.stop();
+        };
+        recognition.onerror = () => recognition.stop();
+        recognition.start();
+    }
+
+    function addItem() {
+        const inp = document.getElementById('main-input');
+        if (!inp.value.trim()) return;
+        products.push({ id: Date.now(), name: inp.value, shop: currentTab === 'Wszystkie' ? 'Ogólne' : currentTab, done: false });
+        inp.value = "";
+        updateStorage();
+    }
+
+    function editItem(id) {
+        const product = products.find(p => p.id === id);
+        const newName = prompt("Edytuj produkt:", product.name);
+        if (newName && newName.trim() !== "") {
+            product.name = newName.trim();
+            updateStorage();
+        }
+    }
+
+    function renderApp() {
+        const tabEl = document.getElementById('tabs');
+        tabEl.innerHTML = shops.map(s => `
+            <div class="tab ${currentTab === s ? 'active' : ''}" onclick="switchTab('${s}')">
+                ${s} ${s !== 'Wszystkie' ? `<span onclick="deleteShop('${s}', event)" style="margin-left:8px; opacity:0.5">×</span>` : ''}
+            </div>
+        `).join('') + `<div class="tab" onclick="addShop()">+ Nowy</div>`;
+
+        const listEl = document.getElementById('list-container');
+        listEl.innerHTML = "";
+        
+        const filtered = currentTab === 'Wszystkie' ? products : products.filter(p => p.shop === currentTab);
+        const groups = [...new Set(filtered.map(p => p.shop))];
+
+        let globalIndex = 1;
+        groups.forEach(group => {
+            if (currentTab === 'Wszystkie') {
+                const label = document.createElement('div');
+                label.className = 'group-label';
+                label.innerText = group;
+                listEl.appendChild(label);
+            }
+            filtered.filter(p => p.shop === group).forEach(p => {
+                const li = document.createElement('li');
+                li.className = p.done ? 'is-done' : '';
+                li.innerHTML = `
+                    <div class="item-number">${globalIndex++}.</div>
+                    <div class="item-content" onclick="toggleDone(${p.id})">${p.name}</div>
+                    <button class="action-btn btn-edit" onclick="editItem(${p.id})">✏️</button>
+                    <button class="action-btn btn-del" onclick="deleteItem(${p.id})">✕</button>
+                `;
+                listEl.appendChild(li);
+            });
+        });
+    }
+
+    function switchTab(s) { currentTab = s; renderApp(); }
+    function toggleDone(id) { products = products.map(p => p.id === id ? {...p, done: !p.done} : p); updateStorage(); }
+    function deleteItem(id) { products = products.filter(p => p.id !== id); updateStorage(); }
+    function clearChecked() { if(confirm("Usunąć odznaczone produkty?")) { products = products.filter(p => !p.done); updateStorage(); } }
+    function addShop() {
+        const n = prompt("Nazwa sklepu:");
+        if (n && !shops.includes(n)) { shops.push(n); currentTab = n; updateStorage(); }
+    }
+    function deleteShop(s, e) {
+        e.stopPropagation();
+        if (confirm(`Usunąć sklep ${s}?`)) {
+            products = products.filter(p => p.shop !== s);
+            shops = shops.filter(x => x !== s);
+            currentTab = 'Wszystkie';
+            updateStorage();
+        }
+    }
+    function copyToClipboard() {
+        const filtered = currentTab === 'Wszystkie' ? products : products.filter(p => p.shop === currentTab);
+        const text = filtered.map((p, idx) => `${idx + 1}. ${p.name}`).join('\n');
+        navigator.clipboard.writeText(`Lista ${currentTab}:\n${text}`);
+        alert("Skopiowano!");
+    }
+
+    function setTheme(t) {
+        document.body.className = t + '-mode';
+        localStorage.setItem('sb_theme', t);
+    }
+
+    setTheme(localStorage.getItem('sb_theme') || 'light');
+    document.getElementById('main-input').addEventListener('keypress', (e) => e.key === 'Enter' && addItem());
+    renderApp();
+</script>
+</body>
+</html>
