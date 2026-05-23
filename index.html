@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Basket v5.3 - Base Restored</title>
+    <title>Smart Basket v6.7</title>
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -17,6 +17,10 @@
             --edit: #27ae60;
             --glass-border: rgba(255, 255, 255, 0.4);
             --footer-text: rgba(0, 0, 0, 0.5);
+            --badge-bg: rgba(9, 132, 227, 0.15);
+            --badge-color: #0984e3;
+            --menu-bg: rgba(255, 255, 255, 0.85);
+            --modal-overlay: rgba(0, 0, 0, 0.4);
         }
 
         body.dark-mode {
@@ -26,6 +30,10 @@
             --accent: #74b9ff;
             --glass-border: rgba(255, 255, 255, 0.1);
             --footer-text: rgba(255, 255, 255, 0.5);
+            --badge-bg: rgba(116, 185, 255, 0.2);
+            --badge-color: #74b9ff;
+            --menu-bg: rgba(30, 30, 30, 0.9);
+            --modal-overlay: rgba(0, 0, 0, 0.7);
         }
 
         html, body {
@@ -44,9 +52,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 60px 20px 20px 20px;
             color: var(--text-color);
-            transition: 0.3s ease;
+            transition: background 0.3s ease;
             box-sizing: border-box;
         }
 
@@ -55,35 +63,111 @@
             outline: none;
         }
 
-        .glass-nav {
+        /* --- MENU OPCJI --- */
+        .settings-container {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 100;
+        }
+
+        .trigger-btn {
             background: var(--card-bg);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            padding: 12px 20px;
-            border-radius: 50px;
-            margin-bottom: 25px;
-            display: flex;
-            gap: 10px;
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            max-width: 95%;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            background: rgba(255,255,255,0.1);
             border: 1px solid var(--glass-border);
             color: var(--text-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 18px;
             cursor: pointer;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 12px;
-            transition: 0.2s;
-            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .btn:hover { background: var(--accent); color: white; }
+        
+        .trigger-btn.active {
+            transform: rotate(180deg) scale(1.05);
+        }
+
+        .options-menu {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: var(--menu-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            min-width: 160px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .options-menu.show {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .menu-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        .menu-btn:hover { background: rgba(255,255,255,0.15); }
+        body:not(.dark-mode) .menu-btn:hover { background: rgba(0,0,0,0.05); }
+
+        /* --- INTERFEJS GŁÓWNY --- */
+        .app-title-container {
+            text-align: center;
+            margin-bottom: 25px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .app-title {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin: 0 0 8px 0;
+            background: linear-gradient(45deg, var(--text-color), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .global-counter {
+            font-size: 13px;
+            font-weight: 700;
+            opacity: 0.8;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 6px 16px;
+            border-radius: 50px;
+            display: inline-block;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
 
         .glass-card {
             background: var(--card-bg);
@@ -110,39 +194,121 @@
         .tabs-container::-webkit-scrollbar { display: none; }
 
         .tab {
-            padding: 10px 20px;
+            padding: 10px 18px;
             background: rgba(0,0,0,0.05);
             border-radius: 15px;
             cursor: pointer;
             white-space: nowrap;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             transition: 0.3s;
             border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         .tab.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        .input-group { display: flex; gap: 8px; margin-bottom: 20px; }
+        .input-group { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 20px; 
+            align-items: center;
+        }
+        
         input#main-input {
             flex-grow: 1;
-            padding: 12px 15px;
-            border-radius: 12px;
+            height: 48px;
+            padding: 0 15px;
+            border-radius: 14px;
             border: 1px solid var(--glass-border);
             background: rgba(255,255,255,0.15);
             color: var(--text-color);
-            font-size: 16px;
+            font-size: 15px;
             min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .input-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.15);
+            color: var(--text-color);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+        .input-btn:active { transform: scale(0.95); }
+        
+        #add-btn span {
+            display: inline-block;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #add-btn.spin span {
+            transform: rotate(90deg);
+        }
+        
+        #voice-btn.recording {
+            background: rgba(214, 48, 49, 0.2);
+            border-color: var(--danger);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 10px rgba(214, 48, 49, 0.5); }
+            100% { transform: scale(1); }
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 25px 10px 10px 10px;
         }
 
         .group-label {
-            font-size: 10px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin: 20px 0 8px 10px;
             font-weight: 800;
             color: var(--accent);
-            opacity: 0.8;
+            opacity: 0.9;
         }
+
+        .group-counter {
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.6;
+        }
+
+        /* Podkategorie */
+        .category-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            opacity: 0.6;
+            margin: 16px 10px 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-color);
+        }
+        .category-header::before {
+            content: '•';
+            color: var(--accent);
+            font-weight: 800;
+        }
+
+        ul { list-style: none; padding: 0; margin: 0; }
 
         li {
             background: rgba(255,255,255,0.15);
@@ -154,16 +320,123 @@
             border: 1px solid var(--glass-border);
             gap: 10px;
             word-break: break-word;
+            transition: opacity 0.2s ease, filter 0.2s ease;
         }
 
         .item-number { font-weight: 800; font-size: 12px; opacity: 0.5; min-width: 25px; }
-        .item-content { flex-grow: 1; cursor: pointer; font-size: 15px; }
+        
+        .item-core {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .item-content { font-size: 15px; user-select: none; }
+
         li.is-done { opacity: 0.35; filter: grayscale(1); }
         li.is-done .item-content { text-decoration: line-through; }
 
-        .action-btn { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.6; padding: 5px; }
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.6; padding: 5px; transition: opacity 0.2s; }
+        .action-btn:hover { opacity: 1; }
         .btn-edit { color: var(--edit); }
         .btn-del { color: var(--danger); }
+
+        /* --- MODAL GLASSMORPHISM --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--modal-overlay);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .custom-modal {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+            transform: scale(0.9);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.show .custom-modal {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            color: var(--text-color);
+        }
+
+        .modal-input {
+            width: 100%;
+            height: 46px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0 14px;
+            color: var(--text-color);
+            font-size: 15px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .modal-btn:active { transform: scale(0.97); }
+
+        .btn-cancel {
+            background: transparent;
+            color: var(--text-color);
+            border-color: var(--glass-border);
+        }
+        .btn-cancel:hover { background: rgba(255,255,255,0.05); }
+
+        .btn-confirm {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-confirm:hover { filter: brightness(1.1); }
 
         .app-footer {
             width: 100%;
@@ -179,40 +452,206 @@
 </head>
 <body>
 
-<div class="glass-nav">
-    <button class="btn" onclick="setTheme('light')">☀️ Jasny</button>
-    <button class="btn" onclick="setTheme('dark')">🌙 Ciemny</button>
-    <button class="btn" onclick="copyToClipboard()">📋 Kopiuj</button>
-    <button class="btn" onclick="clearChecked()">Wyczyść 🧹</button>
+<div class="settings-container">
+    <button id="trigger-btn" class="trigger-btn" onclick="toggleMenu(event)">⚙️</button>
+    <div id="options-menu" class="options-menu">
+        <button class="menu-btn" id="theme-toggle-btn" onclick="toggleTheme()">🌙 Motyw</button>
+        <button class="menu-btn" onclick="copyToClipboard()">📋 Kopiuj listę</button>
+        <button class="menu-btn" style="color: var(--danger);" onclick="clearChecked()">🧹 Wyczyść kupione</button>
+    </div>
+</div>
+
+<div class="app-title-container">
+    <h1 class="app-title">Lista zakupów</h1>
+    <div id="global-counter" class="global-counter">Kupione: 0 / 0</div>
 </div>
 
 <div class="glass-card">
     <div id="tabs" class="tabs-container"></div>
 
     <div class="input-group">
-        <input type="text" id="main-input" placeholder="Co kupić?">
-        <button class="btn" id="voice-btn" style="padding: 10px;" onclick="handleVoice()">🎙️</button>
-        <button class="btn" style="background: var(--accent); color: white;" onclick="addItem()">DODAJ</button>
+        <input type="text" id="main-input" placeholder="Kat: Produkt (np. Owoce: Banany) lub sam Produkt...">
+        <button class="input-btn" id="voice-btn" onclick="handleVoice()">🎙️</button>
+        <button class="input-btn" id="add-btn" style="background: var(--accent); color: white;" onclick="addItem()"><span>➕</span></button>
     </div>
 
     <div id="list-container"></div>
 </div>
 
+<div id="custom-modal-container" class="modal-overlay" onclick="closeCustomModal()">
+    <div class="custom-modal" onclick="event.stopPropagation()">
+        <div class="modal-title" id="modal-title-text">Dodaj kategorię</div>
+        <input type="text" id="modal-input-field" class="modal-input" placeholder="Wpisz nazwę...">
+        <div class="modal-actions">
+            <button class="modal-btn btn-cancel" onclick="closeCustomModal()">Anuluj</button>
+            <button class="modal-btn btn-confirm" id="modal-confirm-btn" onclick="submitCustomModal()">OK</button>
+        </div>
+    </div>
+</div>
+
 <div class="app-footer">
-    Smart Basket v5.3 locked | by D. M. & AI
+    Smart Basket v6.7locked | by D. M. & AI
 </div>
 
 <script>
-    let products = JSON.parse(localStorage.getItem('sb_products')) || [];
-    let shops = JSON.parse(localStorage.getItem('sb_shops')) || ['Wszystkie', 'Lidl', 'Biedronka'];
+    let db;
+    let products = [];
+    let categories = JSON.parse(localStorage.getItem('sb_shops')) || ['Wszystkie', 'Lidl', 'Biedronka'];
     let currentTab = 'Wszystkie';
     let recognition;
+    let isRecording = false;
+    let wakeLock = null;
+    let activeModalCallback = null;
+
+    // --- INDEXEDDB INIT ---
+    const dbRequest = indexedDB.open('SmartBasketDB', 1);
+
+    dbRequest.onupgradeneeded = (e) => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains('products')) {
+            db.createObjectStore('products', { keyPath: 'id' });
+        }
+    };
+
+    dbRequest.onsuccess = (e) => {
+        db = e.target.result;
+        loadProductsFromDB();
+    };
+
+    dbRequest.onerror = (e) => {
+        console.error("Błąd IndexedDB:", e.target.error);
+        products = JSON.parse(localStorage.getItem('sb_products_fallback')) || [];
+        renderApp();
+    };
+
+    function loadProductsFromDB() {
+        const transaction = db.transaction('products', 'readonly');
+        const store = transaction.objectStore('products');
+        const getAllRequest = store.getAll();
+
+        getAllRequest.onsuccess = () => {
+            products = getAllRequest.result;
+            renderApp();
+        };
+    }
+
+    function syncProductToDB(product) {
+        if (!db) return;
+        const transaction = db.transaction('products', 'readwrite');
+        const store = transaction.objectStore('products');
+        store.put(product);
+    }
+
+    function deleteProductFromDB(id) {
+        if (!db) return;
+        const transaction = db.transaction('products', 'readwrite');
+        const store = transaction.objectStore('products');
+        store.delete(id);
+    }
+
+    function clearCheckedFromDB(idsToDelete) {
+        if (!db || idsToDelete.length === 0) return;
+        const transaction = db.transaction('products', 'readwrite');
+        const store = transaction.objectStore('products');
+        idsToDelete.forEach(id => store.delete(id));
+    }
+
+    function saveCategoriesToStorage() {
+        localStorage.setItem('sb_shops', JSON.stringify(categories));
+    }
+
+    function openCustomModal(title, placeholder, defaultValue, onConfirm) {
+        document.getElementById('modal-title-text').innerText = title;
+        const input = document.getElementById('modal-input-field');
+        input.placeholder = placeholder;
+        input.value = defaultValue;
+        activeModalCallback = onConfirm;
+
+        const container = document.getElementById('custom-modal-container');
+        container.style.display = 'flex';
+        setTimeout(() => {
+            container.classList.add('show');
+            input.focus();
+        }, 10);
+
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter') submitCustomModal();
+        };
+    }
+
+    function closeCustomModal() {
+        const container = document.getElementById('custom-modal-container');
+        container.classList.remove('show');
+        setTimeout(() => {
+            container.style.display = 'none';
+            activeModalCallback = null;
+        }, 250);
+    }
+
+    function submitCustomModal() {
+        const value = document.getElementById('modal-input-field').value.trim();
+        if (activeModalCallback) {
+            activeModalCallback(value);
+        }
+        closeCustomModal();
+    }
+
+    function toggleMenu(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('options-menu');
+        const btn = document.getElementById('trigger-btn');
+        
+        if (menu.classList.contains('show')) {
+            closeMenu();
+        } else {
+            menu.style.display = 'flex';
+            setTimeout(() => {
+                menu.classList.add('show');
+                btn.classList.add('active');
+            }, 10);
+        }
+    }
+
+    function closeMenu() {
+        const menu = document.getElementById('options-menu');
+        const btn = document.getElementById('trigger-btn');
+        
+        menu.classList.remove('show');
+        btn.classList.remove('active');
+        
+        setTimeout(() => {
+            if (!menu.classList.contains('show')) {
+                menu.style.display = 'none';
+            }
+        }, 300);
+    }
+
+    document.addEventListener('click', () => {
+        closeMenu();
+    });
+
+    function toggleTheme() {
+        const isDark = document.body.classList.contains('dark-mode');
+        setTheme(isDark ? 'light' : 'dark');
+    }
+
+    function setTheme(t) {
+        const btn = document.getElementById('theme-toggle-btn');
+        if (t === 'dark') {
+            document.body.classList.add('dark-mode');
+            if(btn) btn.innerHTML = "☀️ Tryb jasny";
+        } else {
+            document.body.classList.remove('dark-mode');
+            if(btn) btn.innerHTML = "🌙 Tryb ciemny";
+        }
+        localStorage.setItem('sb_theme', t);
+    }
 
     function playStandardMicSound() {
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
+            const gainNode = audioCtx.gain || audioCtx.createGain();
             oscillator.type = 'sine';
             oscillator.frequency.setValueAtTime(660, audioCtx.currentTime);
             gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
@@ -224,112 +663,322 @@
         } catch(e) {}
     }
 
-    function updateStorage() {
-        localStorage.setItem('sb_products', JSON.stringify(products));
-        localStorage.setItem('sb_shops', JSON.stringify(shops));
-        renderApp();
-    }
-
     function handleVoice() {
         const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!Speech) return alert("Brak wsparcia mowy.");
+
+        const voiceBtn = document.getElementById('voice-btn');
+        if (isRecording) { recognition.stop(); return; }
+
         playStandardMicSound();
         recognition = new Speech();
         recognition.lang = 'pl-PL';
-        recognition.onresult = (e) => {
-            document.getElementById('main-input').value = e.results[0][0].transcript;
-            addItem();
-            recognition.stop();
+        recognition.continuous = false; 
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            isRecording = true;
+            voiceBtn.classList.add('recording');
+            voiceBtn.innerText = "🔴";
         };
-        recognition.onerror = () => recognition.stop();
+
+        recognition.onresult = (e) => {
+            const transcript = e.results[0][0].transcript.trim();
+            if (transcript) {
+                processVoiceInput(transcript);
+            }
+        };
+
+        recognition.onerror = () => stopRecordingState();
+        recognition.onend = () => stopRecordingState();
         recognition.start();
+    }
+
+    function stopRecordingState() {
+        isRecording = false;
+        document.getElementById('voice-btn').classList.remove('recording');
+        document.getElementById('voice-btn').innerText = "🎙️";
+    }
+
+    function processVoiceInput(text) {
+        let cleanText = text.replace(/\boraz\b/gi, ',');
+        cleanText = cleanText.replace(/\bi\b/gi, ',');
+        
+        const items = cleanText.split(',').map(item => item.trim()).filter(item => item.length > 0);
+        
+        items.forEach((item, index) => {
+            setTimeout(() => {
+                addVoiceItem(item);
+            }, index * 50); 
+        });
+    }
+
+    function parseInput(val) {
+        let category = "";
+        let name = val;
+        
+        if (val.includes(':')) {
+            const parts = val.split(':');
+            category = parts[0].trim();
+            name = parts.slice(1).join(':').trim(); 
+            
+            if(!name || name === "") {
+                name = category;
+                category = "";
+            }
+        }
+        return { category, name };
     }
 
     function addItem() {
         const inp = document.getElementById('main-input');
-        if (!inp.value.trim()) return;
-        products.push({ id: Date.now(), name: inp.value, shop: currentTab === 'Wszystkie' ? 'Ogólne' : currentTab, done: false });
+        const rawValue = inp.value.trim();
+        if (!rawValue) return;
+        
+        animatePlusButton();
+
+        const targetShop = currentTab === 'Wszystkie' ? (categories[1] || 'Ogólne') : currentTab;
+        const parsed = parseInput(rawValue);
+
+        const newProduct = { 
+            id: Date.now(), 
+            name: parsed.name, 
+            category: parsed.category,
+            shop: targetShop, 
+            done: false 
+        };
+
+        products.push(newProduct);
+        syncProductToDB(newProduct);
         inp.value = "";
-        updateStorage();
+        renderApp();
+    }
+
+    function addVoiceItem(text) {
+        const targetShop = currentTab === 'Wszystkie' ? (categories[1] || 'Ogólne') : currentTab;
+        const parsed = parseInput(text);
+
+        const newProduct = { 
+            id: Date.now() + Math.floor(Math.random() * 1000), 
+            name: parsed.name, 
+            category: parsed.category,
+            shop: targetShop, 
+            done: false 
+        };
+
+        products.push(newProduct);
+        syncProductToDB(newProduct);
+        renderApp();
+    }
+
+    function animatePlusButton() {
+        const addBtn = document.getElementById('add-btn');
+        addBtn.classList.remove('spin');
+        void addBtn.offsetWidth; 
+        addBtn.classList.add('spin');
+        
+        setTimeout(() => {
+            addBtn.classList.remove('spin');
+        }, 250);
     }
 
     function editItem(id) {
         const product = products.find(p => p.id === id);
-        const newName = prompt("Edytuj produkt:", product.name);
-        if (newName && newName.trim() !== "") {
-            product.name = newName.trim();
-            updateStorage();
+        const currentString = product.category ? `${product.category}: ${product.name}` : product.name;
+        
+        openCustomModal("Edytuj produkt", "Format -> Kat: Nazwa", currentString, (newRawName) => {
+            if (newRawName && newRawName.trim() !== "") {
+                const parsed = parseInput(newRawName.trim());
+                product.name = parsed.name;
+                product.category = parsed.category;
+                syncProductToDB(product);
+                renderApp();
+            }
+        });
+    }
+
+    function toggleDone(id) {
+        products = products.map(p => {
+            if (p.id === id) {
+                const updated = {...p, done: !p.done};
+                syncProductToDB(updated);
+                return updated;
+            }
+            return p;
+        });
+        renderApp();
+    }
+
+    function deleteItem(id) {
+        products = products.filter(p => p.id !== id);
+        deleteProductFromDB(id);
+        renderApp();
+    }
+
+    function clearChecked() {
+        if(confirm("Usunąć odznaczone produkty?")) {
+            const checkedItems = products.filter(p => p.done);
+            const idsToDelete = checkedItems.map(p => p.id);
+            
+            products = products.filter(p => !p.done);
+            clearCheckedFromDB(idsToDelete);
+            renderApp();
         }
     }
 
     function renderApp() {
+        const activeProducts = currentTab === 'Wszystkie' ? products : products.filter(p => p.shop === currentTab);
+        const globalDone = activeProducts.filter(p => p.done).length;
+        const globalTotal = activeProducts.length;
+        document.getElementById('global-counter').innerText = `Kupione: ${globalDone} / ${globalTotal}`;
+
         const tabEl = document.getElementById('tabs');
-        tabEl.innerHTML = shops.map(s => `
-            <div class="tab ${currentTab === s ? 'active' : ''}" onclick="switchTab('${s}')">
-                ${s} ${s !== 'Wszystkie' ? `<span onclick="deleteShop('${s}', event)" style="margin-left:8px; opacity:0.5">×</span>` : ''}
-            </div>
-        `).join('') + `<div class="tab" onclick="addShop()">+ Nowy</div>`;
+        tabEl.innerHTML = categories.map(s => {
+            const shopProducts = s === 'Wszystkie' ? products : products.filter(p => p.shop === s);
+            const doneCount = shopProducts.filter(p => p.done).length;
+            const totalCount = shopProducts.length;
+            const counterBadge = totalCount > 0 ? `<span style="font-size:10px; opacity:0.6">(${doneCount}/${totalCount})</span>` : '';
+
+            return `
+                <div class="tab ${currentTab === s ? 'active' : ''}" onclick="switchTab('${s}')">
+                    <span>${s}</span> ${counterBadge}
+                    ${s !== 'Wszystkie' ? `<span onclick="deleteCategory('${s}', event)" style="margin-left:5px; opacity:0.5; font-weight:800;">×</span>` : ''}
+                </div>
+            `;
+        }).join('') + `<div class="tab" onclick="addCategory()">+ Nowy</div>`;
 
         const listEl = document.getElementById('list-container');
         listEl.innerHTML = "";
         
-        const filtered = currentTab === 'Wszystkie' ? products : products.filter(p => p.shop === currentTab);
-        const groups = [...new Set(filtered.map(p => p.shop))];
+        let filtered = currentTab === 'Wszystkie' ? products : products.filter(p => p.shop === currentTab);
+        
+        filtered.forEach(p => { if(!p.category) p.category = ""; });
 
-        let globalIndex = 1;
-        groups.forEach(group => {
-            if (currentTab === 'Wszystkie') {
-                const label = document.createElement('div');
-                label.className = 'group-label';
-                label.innerText = group;
-                listEl.appendChild(label);
+        // Sortowanie: najpierw te z przypisaną kategorią, na końcu te bez kategorii (puste)
+        filtered.sort((a, b) => {
+            if (a.done !== b.done) return a.done - b.done;
+            
+            if (a.category === "" && b.category !== "") return 1;
+            if (a.category !== "" && b.category === "") return -1;
+            
+            if (a.category.toLowerCase() !== b.category.toLowerCase()) {
+                return a.category.localeCompare(b.category, 'pl');
             }
-            filtered.filter(p => p.shop === group).forEach(p => {
-                const li = document.createElement('li');
-                li.className = p.done ? 'is-done' : '';
-                li.innerHTML = `
-                    <div class="item-number">${globalIndex++}.</div>
-                    <div class="item-content" onclick="toggleDone(${p.id})">${p.name}</div>
-                    <button class="action-btn btn-edit" onclick="editItem(${p.id})">✏️</button>
-                    <button class="action-btn btn-del" onclick="deleteItem(${p.id})">✕</button>
+            return a.id - b.id;
+        });
+
+        const groups = [...new Set(filtered.map(p => p.shop))];
+        let globalIndex = 1;
+
+        groups.forEach(group => {
+            const groupProducts = filtered.filter(p => p.shop === group);
+            const groupDone = groupProducts.filter(p => p.done).length;
+            const groupTotal = groupProducts.length;
+
+            if (currentTab === 'Wszystkie') {
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'group-header';
+                headerDiv.innerHTML = `
+                    <div class="group-label">${group}</div>
+                    <div class="group-counter">${groupDone} / ${groupTotal}</div>
                 `;
-                listEl.appendChild(li);
+                listEl.appendChild(headerDiv);
+            }
+            
+            const categoriesInGroup = [...new Set(groupProducts.map(p => p.category))];
+
+            categoriesInGroup.forEach(cat => {
+                const catProducts = groupProducts.filter(p => p.category === cat);
+                
+                // Renderuj nagłówek tylko wtedy, gdy nazwa kategorii nie jest pusta
+                if (cat !== "") {
+                    const catHeader = document.createElement('div');
+                    catHeader.className = 'category-header';
+                    catHeader.innerText = cat;
+                    listEl.appendChild(catHeader);
+                }
+
+                const ul = document.createElement('ul');
+                catProducts.forEach(p => {
+                    const li = document.createElement('li');
+                    li.className = p.done ? 'is-done' : '';
+                    li.innerHTML = `
+                        <div class="item-number">${globalIndex++}.</div>
+                        <div class="item-core" onclick="toggleDone(${p.id})">
+                            <div class="item-content">${p.name}</div>
+                        </div>
+                        <button class="action-btn btn-edit" onclick="editItem(${p.id})">✏️</button>
+                        <button class="action-btn btn-del" onclick="deleteItem(${p.id})">✕</button>
+                    `;
+                    ul.appendChild(li);
+                });
+                listEl.appendChild(ul);
             });
         });
+
+        localStorage.setItem('sb_products_fallback', JSON.stringify(products));
     }
 
     function switchTab(s) { currentTab = s; renderApp(); }
-    function toggleDone(id) { products = products.map(p => p.id === id ? {...p, done: !p.done} : p); updateStorage(); }
-    function deleteItem(id) { products = products.filter(p => p.id !== id); updateStorage(); }
-    function clearChecked() { if(confirm("Usunąć odznaczone produkty?")) { products = products.filter(p => !p.done); updateStorage(); } }
-    function addShop() {
-        const n = prompt("Nazwa sklepu:");
-        if (n && !shops.includes(n)) { shops.push(n); currentTab = n; updateStorage(); }
+    
+    function addCategory() {
+        openCustomModal("Dodaj kategorie", "Wpisz nazwę kategorii...", "", (n) => {
+            if (n && n.trim() !== "") { 
+                const cleanName = n.trim();
+                if (!categories.includes(cleanName)) {
+                    categories.push(cleanName); 
+                    currentTab = cleanName; 
+                    saveCategoriesToStorage();
+                    renderApp(); 
+                }
+            }
+        });
     }
-    function deleteShop(s, e) {
+    
+    function deleteCategory(s, e) {
         e.stopPropagation();
-        if (confirm(`Usunąć sklep ${s}?`)) {
-            products = products.filter(p => p.shop !== s);
-            shops = shops.filter(x => x !== s);
+        if (confirm(`Usunąć kategorię ${s} wraz z przypisanymi produktami?`)) {
+            const itemsToDelete = products.filter(p => p.shop === s).map(p => p.id);
+            clearCheckedFromDB(itemsToDelete);
+
+            products = products.filter(p => !itemsToDelete.includes(p.id));
+            categories = categories.filter(x => x !== s);
             currentTab = 'Wszystkie';
-            updateStorage();
+            saveCategoriesToStorage();
+            renderApp();
         }
     }
+    
     function copyToClipboard() {
         const filtered = currentTab === 'Wszystkie' ? products : products.filter(p => p.shop === currentTab);
-        const text = filtered.map((p, idx) => `${idx + 1}. ${p.name}`).join('\n');
+        const text = filtered.map((p, idx) => `${idx + 1}. [${p.done ? 'X' : ' '}] ${p.category ? '(' + p.category + ') ' : ''}${p.name}`).join('\n');
         navigator.clipboard.writeText(`Lista ${currentTab}:\n${text}`);
-        alert("Skopiowano!");
+        alert("Skopiowano listę do schowka!");
     }
 
-    function setTheme(t) {
-        document.body.className = t + '-mode';
-        localStorage.setItem('sb_theme', t);
+    async function requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) {
+                wakeLock = await navigator.wakeLock.request('screen');
+            }
+        } catch (err) {}
     }
+
+    document.addEventListener('visibilitychange', async () => {
+        if (wakeLock !== null && document.visibilityState === 'visible') {
+            await requestWakeLock();
+        }
+    });
 
     setTheme(localStorage.getItem('sb_theme') || 'light');
     document.getElementById('main-input').addEventListener('keypress', (e) => e.key === 'Enter' && addItem());
-    renderApp();
+    requestWakeLock();
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+        });
+    }
 </script>
 </body>
 </html>
