@@ -394,6 +394,15 @@
             margin: 0 0 16px 0;
             color: var(--text-color);
         }
+        
+        .modal-message {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-color);
+            opacity: 0.85;
+            margin-bottom: 20px;
+            display: none;
+        }
 
         .modal-input {
             width: 100%;
@@ -470,7 +479,8 @@
     <div id="tabs" class="tabs-container"></div>
 
     <div class="input-group">
-        <input type="text" id="main-input" placeholder="Kat: Produkt (np. Owoce: Banany) lub sam Produkt...">
+        <!-- ZMIANA 1: Zaktualizowany krótki placeholder -->
+        <input type="text" id="main-input" placeholder="Nazwa produktu">
         <button class="input-btn" id="voice-btn" onclick="handleVoice()">🎙️</button>
         <button class="input-btn" id="add-btn" style="background: var(--accent); color: white;" onclick="addItem()"><span>➕</span></button>
     </div>
@@ -478,12 +488,14 @@
     <div id="list-container"></div>
 </div>
 
-<div id="custom-modal-container" class="modal-overlay" onclick="closeCustomModal()">
+<!-- ZMIANA 2: Ulepszona struktura okienka modalnego (obsługuje alerty, pytania T/N i wprowadzanie tekstu) -->
+<div id="custom-modal-container" class="modal-overlay" onclick="cancelCustomModal()">
     <div class="custom-modal" onclick="event.stopPropagation()">
-        <div class="modal-title" id="modal-title-text">Dodaj kategorię</div>
+        <div class="modal-title" id="modal-title-text">Tytuł okna</div>
+        <div id="modal-message-text" class="modal-message"></div>
         <input type="text" id="modal-input-field" class="modal-input" placeholder="Wpisz nazwę...">
         <div class="modal-actions">
-            <button class="modal-btn btn-cancel" onclick="closeCustomModal()">Anuluj</button>
+            <button class="modal-btn btn-cancel" id="modal-cancel-btn" onclick="cancelCustomModal()">Anuluj</button>
             <button class="modal-btn btn-confirm" id="modal-confirm-btn" onclick="submitCustomModal()">OK</button>
         </div>
     </div>
@@ -560,26 +572,70 @@
         localStorage.setItem('sb_shops', JSON.stringify(categories));
     }
 
-    function openCustomModal(title, placeholder, defaultValue, onConfirm) {
-        document.getElementById('modal-title-text').innerText = title;
-        const input = document.getElementById('modal-input-field');
-        input.placeholder = placeholder;
-        input.value = defaultValue;
-        activeModalCallback = onConfirm;
+    // --- ZMIANA 3: Nowy, uniwersalny system modalny ---
+    function openCustomModal(options) {
+        document.getElementById('modal-title-text').innerText = options.title || 'Komunikat';
+        
+        const msgEl = document.getElementById('modal-message-text');
+        if(options.text) { 
+            msgEl.innerText = options.text; 
+            msgEl.style.display = 'block'; 
+        } else { 
+            msgEl.style.display = 'none'; 
+        }
+        
+        const inputEl = document.getElementById('modal-input-field');
+        if(options.showInput) {
+            inputEl.style.display = 'block';
+            inputEl.placeholder = options.placeholder || '';
+            inputEl.value = options.inputValue || '';
+        } else {
+            inputEl.style.display = 'none';
+        }
+
+        const cancelBtn = document.getElementById('modal-cancel-btn');
+        if(options.type === 'alert') {
+            cancelBtn.style.display = 'none';
+        } else {
+            cancelBtn.style.display = 'inline-block';
+        }
+
+        activeModalCallback = options.onConfirm;
 
         const container = document.getElementById('custom-modal-container');
         container.style.display = 'flex';
+        
         setTimeout(() => {
             container.classList.add('show');
-            input.focus();
+            if(options.showInput) inputEl.focus();
         }, 10);
 
-        input.onkeypress = (e) => {
+        inputEl.onkeypress = (e) => {
             if (e.key === 'Enter') submitCustomModal();
         };
     }
 
-    function closeCustomModal() {
+    function submitCustomModal() {
+        const inputEl = document.getElementById('modal-input-field');
+        let result = true;
+        if (inputEl.style.display !== 'none') {
+            result = inputEl.value.trim();
+        }
+        
+        if (activeModalCallback) {
+            activeModalCallback(result);
+        }
+        closeModalUI();
+    }
+
+    function cancelCustomModal() {
+        if (activeModalCallback) {
+            activeModalCallback(false);
+        }
+        closeModalUI();
+    }
+
+    function closeModalUI() {
         const container = document.getElementById('custom-modal-container');
         container.classList.remove('show');
         setTimeout(() => {
@@ -587,14 +643,7 @@
             activeModalCallback = null;
         }, 250);
     }
-
-    function submitCustomModal() {
-        const value = document.getElementById('modal-input-field').value.trim();
-        if (activeModalCallback) {
-            activeModalCallback(value);
-        }
-        closeCustomModal();
-    }
+    // ---------------------------------------------------
 
     function toggleMenu(e) {
         e.stopPropagation();
@@ -665,7 +714,14 @@
 
     function handleVoice() {
         const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!Speech) return alert("Brak wsparcia mowy.");
+        if (!Speech) {
+            // Zamiana alertu na ładny Modal
+            return openCustomModal({ 
+                type: 'alert', 
+                title: 'Błąd funkcji', 
+                text: 'Twoja przeglądarka nie wspiera systemowego rozpoznawania mowy.' 
+            });
+        }
 
         const voiceBtn = document.getElementById('voice-btn');
         if (isRecording) { recognition.stop(); return; }
@@ -786,13 +842,19 @@
         const product = products.find(p => p.id === id);
         const currentString = product.category ? `${product.category}: ${product.name}` : product.name;
         
-        openCustomModal("Edytuj produkt", "Format -> Kat: Nazwa", currentString, (newRawName) => {
-            if (newRawName && newRawName.trim() !== "") {
-                const parsed = parseInput(newRawName.trim());
-                product.name = parsed.name;
-                product.category = parsed.category;
-                syncProductToDB(product);
-                renderApp();
+        openCustomModal({
+            title: "Edytuj produkt",
+            showInput: true,
+            placeholder: "Kat: Nazwa lub tylko Nazwa",
+            inputValue: currentString,
+            onConfirm: (newRawName) => {
+                if (newRawName && typeof newRawName === 'string' && newRawName.trim() !== "") {
+                    const parsed = parseInput(newRawName.trim());
+                    product.name = parsed.name;
+                    product.category = parsed.category;
+                    syncProductToDB(product);
+                    renderApp();
+                }
             }
         });
     }
@@ -816,14 +878,22 @@
     }
 
     function clearChecked() {
-        if(confirm("Usunąć odznaczone produkty?")) {
-            const checkedItems = products.filter(p => p.done);
-            const idsToDelete = checkedItems.map(p => p.id);
-            
-            products = products.filter(p => !p.done);
-            clearCheckedFromDB(idsToDelete);
-            renderApp();
-        }
+        // Zmiana confirm() na własny modal
+        openCustomModal({
+            type: 'confirm',
+            title: 'Wyczyść listę',
+            text: 'Czy na pewno chcesz usunąć wszystkie kupione (odznaczone) produkty?',
+            onConfirm: (confirmed) => {
+                if(confirmed === true) {
+                    const checkedItems = products.filter(p => p.done);
+                    const idsToDelete = checkedItems.map(p => p.id);
+                    
+                    products = products.filter(p => !p.done);
+                    clearCheckedFromDB(idsToDelete);
+                    renderApp();
+                }
+            }
+        });
     }
 
     function renderApp() {
@@ -854,13 +924,10 @@
         
         filtered.forEach(p => { if(!p.category) p.category = ""; });
 
-        // Sortowanie: najpierw te z przypisaną kategorią, na końcu te bez kategorii (puste)
         filtered.sort((a, b) => {
             if (a.done !== b.done) return a.done - b.done;
-            
             if (a.category === "" && b.category !== "") return 1;
             if (a.category !== "" && b.category === "") return -1;
-            
             if (a.category.toLowerCase() !== b.category.toLowerCase()) {
                 return a.category.localeCompare(b.category, 'pl');
             }
@@ -890,7 +957,6 @@
             categoriesInGroup.forEach(cat => {
                 const catProducts = groupProducts.filter(p => p.category === cat);
                 
-                // Renderuj nagłówek tylko wtedy, gdy nazwa kategorii nie jest pusta
                 if (cat !== "") {
                     const catHeader = document.createElement('div');
                     catHeader.className = 'category-header';
@@ -922,14 +988,20 @@
     function switchTab(s) { currentTab = s; renderApp(); }
     
     function addCategory() {
-        openCustomModal("Dodaj kategorie", "Wpisz nazwę kategorii...", "", (n) => {
-            if (n && n.trim() !== "") { 
-                const cleanName = n.trim();
-                if (!categories.includes(cleanName)) {
-                    categories.push(cleanName); 
-                    currentTab = cleanName; 
-                    saveCategoriesToStorage();
-                    renderApp(); 
+        openCustomModal({
+            title: "Dodaj sklep / sekcję",
+            showInput: true,
+            placeholder: "Wpisz nazwę...",
+            inputValue: "",
+            onConfirm: (n) => {
+                if (n && typeof n === 'string' && n.trim() !== "") { 
+                    const cleanName = n.trim();
+                    if (!categories.includes(cleanName)) {
+                        categories.push(cleanName); 
+                        currentTab = cleanName; 
+                        saveCategoriesToStorage();
+                        renderApp(); 
+                    }
                 }
             }
         });
@@ -937,23 +1009,37 @@
     
     function deleteCategory(s, e) {
         e.stopPropagation();
-        if (confirm(`Usunąć kategorię ${s} wraz z przypisanymi produktami?`)) {
-            const itemsToDelete = products.filter(p => p.shop === s).map(p => p.id);
-            clearCheckedFromDB(itemsToDelete);
+        // Zmiana confirm() na własny modal
+        openCustomModal({
+            type: 'confirm',
+            title: 'Usuwanie zakładki',
+            text: `Czy usunąć sekcję "${s}" wraz z przypisanymi produktami?`,
+            onConfirm: (confirmed) => {
+                if (confirmed === true) {
+                    const itemsToDelete = products.filter(p => p.shop === s).map(p => p.id);
+                    clearCheckedFromDB(itemsToDelete);
 
-            products = products.filter(p => !itemsToDelete.includes(p.id));
-            categories = categories.filter(x => x !== s);
-            currentTab = 'Wszystkie';
-            saveCategoriesToStorage();
-            renderApp();
-        }
+                    products = products.filter(p => !itemsToDelete.includes(p.id));
+                    categories = categories.filter(x => x !== s);
+                    currentTab = 'Wszystkie';
+                    saveCategoriesToStorage();
+                    renderApp();
+                }
+            }
+        });
     }
     
     function copyToClipboard() {
         const filtered = currentTab === 'Wszystkie' ? products : products.filter(p => p.shop === currentTab);
         const text = filtered.map((p, idx) => `${idx + 1}. [${p.done ? 'X' : ' '}] ${p.category ? '(' + p.category + ') ' : ''}${p.name}`).join('\n');
         navigator.clipboard.writeText(`Lista ${currentTab}:\n${text}`);
-        alert("Skopiowano listę do schowka!");
+        
+        // Zmiana alert() na własny modal
+        openCustomModal({
+            type: 'alert',
+            title: 'Sukces!',
+            text: 'Skopiowano listę do schowka.'
+        });
     }
 
     async function requestWakeLock() {
@@ -974,9 +1060,45 @@
     document.getElementById('main-input').addEventListener('keypress', (e) => e.key === 'Enter' && addItem());
     requestWakeLock();
 
+    // --- ZMIANA 4: Obsługa aktualizacji PWA przez Modal ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+            navigator.serviceWorker.register('sw.js')
+                .then(registration => {
+                    if (registration.waiting) { 
+                        promptForAppUpdate(registration.waiting); 
+                    }
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) { 
+                                promptForAppUpdate(newWorker); 
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.log('SW error:', err));
+        });
+
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => { 
+            if (!refreshing) { 
+                refreshing = true; 
+                window.location.reload(); 
+            } 
+        });
+    }
+
+    function promptForAppUpdate(worker) {
+        openCustomModal({
+            type: 'confirm',
+            title: 'Dostępna aktualizacja! 🚀',
+            text: 'Wykryto nową wersję Smart Basket. Czy chcesz przeładować aplikację, aby pobrać zmiany?',
+            onConfirm: (confirmed) => {
+                if (confirmed === true) { 
+                    worker.postMessage({ action: 'skipWaiting' }); 
+                }
+            }
         });
     }
 </script>
