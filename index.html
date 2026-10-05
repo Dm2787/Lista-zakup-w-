@@ -467,8 +467,10 @@
             transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out;
         }
         #splash-screen.hidden { opacity: 0; visibility: hidden; }
+        
+        /* ZMIANA: object-fit zmienione na contain, aby film w całości mieścił się na ekranie bez ucinania boków */
         #splash-video {
-            width: 100%; height: 100%; object-fit: cover;
+            width: 100%; height: 100%; object-fit: contain;
         }
     </style>
 </head>
@@ -497,7 +499,6 @@
     <div id="tabs" class="tabs-container"></div>
 
     <div class="input-group">
-        <!-- ZMIANA 1: Zaktualizowany krótki placeholder -->
         <input type="text" id="main-input" placeholder="Nazwa produktu">
         <button class="input-btn" id="voice-btn" onclick="handleVoice()">🎙️</button>
         <button class="input-btn" id="add-btn" style="background: var(--accent); color: white;" onclick="addItem()"><span>➕</span></button>
@@ -506,7 +507,6 @@
     <div id="list-container"></div>
 </div>
 
-<!-- ZMIANA 2: Ulepszona struktura okienka modalnego (obsługuje alerty, pytania T/N i wprowadzanie tekstu) -->
 <div id="custom-modal-container" class="modal-overlay" onclick="cancelCustomModal()">
     <div class="custom-modal" onclick="event.stopPropagation()">
         <div class="modal-title" id="modal-title-text">Tytuł okna</div>
@@ -600,7 +600,7 @@
         localStorage.setItem('sb_shops', JSON.stringify(categories));
     }
 
-    // --- ZMIANA 3: Nowy, uniwersalny system modalny ---
+    // --- SYSTEM MODALNY ---
     function openCustomModal(options) {
         document.getElementById('modal-title-text').innerText = options.title || 'Komunikat';
         
@@ -671,7 +671,6 @@
             activeModalCallback = null;
         }, 250);
     }
-    // ---------------------------------------------------
 
     function toggleMenu(e) {
         e.stopPropagation();
@@ -743,7 +742,6 @@
     function handleVoice() {
         const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!Speech) {
-            // Zamiana alertu na ładny Modal
             return openCustomModal({ 
                 type: 'alert', 
                 title: 'Błąd funkcji', 
@@ -906,7 +904,6 @@
     }
 
     function clearChecked() {
-        // Zmiana confirm() na własny modal
         openCustomModal({
             type: 'confirm',
             title: 'Wyczyść listę',
@@ -1037,7 +1034,6 @@
     
     function deleteCategory(s, e) {
         e.stopPropagation();
-        // Zmiana confirm() na własny modal
         openCustomModal({
             type: 'confirm',
             title: 'Usuwanie zakładki',
@@ -1062,7 +1058,6 @@
         const text = filtered.map((p, idx) => `${idx + 1}. [${p.done ? 'X' : ' '}] ${p.category ? '(' + p.category + ') ' : ''}${p.name}`).join('\n');
         navigator.clipboard.writeText(`Lista ${currentTab}:\n${text}`);
         
-        // Zmiana alert() na własny modal
         openCustomModal({
             type: 'alert',
             title: 'Sukces!',
@@ -1088,7 +1083,7 @@
     document.getElementById('main-input').addEventListener('keypress', (e) => e.key === 'Enter' && addItem());
     requestWakeLock();
 
-    // --- ZMIANA 4: Obsługa aktualizacji PWA przez Modal ---
+    // --- PWA UPDATE ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js')
