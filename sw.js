@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-basket-v6.8';
+const CACHE_NAME = 'smart-basket-v6.9';
 const ASSETS = [
   'index.html',
   'manifest.json',
